@@ -80,3 +80,9 @@ Nếu đã clone mà chưa kéo submodule:
 ```bash
 git submodule update --init --recursive
 ```
+
+## Account mặc định
+
+Account cho nhà kiểm duyệt: qc@example.com, password: qcqc1234
+Account cho nhà quản trị: admin@example.com, password: admin123
+Account cho nhà sáng tạo nội dung: đăng ký trên app.
