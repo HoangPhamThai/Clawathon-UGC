@@ -82,9 +82,3 @@ Nếu đã clone mà chưa kéo submodule:
 ```bash
 git submodule update --init --recursive
 ```
-
-## Account test
-
-- Account cho nhà kiểm duyệt: qc@example.com, password: qcqc1234
-- Account cho nhà quản trị: admin@example.com, password: admin123
-- Account cho nhà sáng tạo nội dung: đăng ký trên app.
