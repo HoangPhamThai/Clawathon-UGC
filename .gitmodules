@@ -1,0 +1,12 @@
+[submodule "agents"]
+	path = agents
+	url = https://github.com/HoangPhamThai/UGC-agent.git
+	branch = main
+[submodule "frontend"]
+	path = frontend
+	url = https://github.com/HoangPhamThai/UGC.git
+	branch = main
+[submodule "backend"]
+	path = backend
+	url = https://github.com/HoangPhamThai/UGC-backend.git
+	branch = main

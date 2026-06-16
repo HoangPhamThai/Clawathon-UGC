@@ -1,0 +1,115 @@
+name: ugc-dev
+services:
+
+  db:
+    image: mongo:latest
+    container_name: ugc-dev-db
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - db_data:/data/db
+    networks:
+      - ugc-dev-network
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          'mongosh --quiet --eval "db.adminCommand(''ping'').ok" | grep -q 1',
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+
+  minio:
+    image: minio/minio:latest
+    container_name: ugc-dev-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio_data:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - ugc-dev-network
+
+  backend:
+    build:
+      context: ../../backend
+      dockerfile: Dockerfile.dev
+    container_name: ugc-dev-backend
+    restart: unless-stopped
+    env_file:
+      - ../../backend/.env
+    volumes:
+      - ../../backend/app:/app/app
+    ports:
+      - "8081:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      minio:
+        condition: service_started
+    networks:
+      - ugc-dev-network
+
+  agents:
+    build:
+      context: ../../agents
+      dockerfile: Dockerfile.dev
+    container_name: ugc-dev-agents
+    restart: unless-stopped
+    env_file:
+      - ../../agents/.env
+    environment:
+      - BACKEND_URL=http://backend:8080
+    volumes:
+      - ../../agents/app:/app/app
+    ports:
+      - "8001:8001"
+    depends_on:
+      - backend
+    networks:
+      - ugc-dev-network
+
+  frontend:
+    build:
+      context: ../../frontend
+      dockerfile: Dockerfile.dev
+    container_name: ugc-dev-frontend
+    restart: unless-stopped
+    volumes:
+      - ../../frontend:/app
+      # Keep the image's alpine-built node_modules (don't shadow with the host's).
+      - /app/node_modules
+    networks:
+      - ugc-dev-network
+
+  nginx:
+    image: nginx:alpine
+    container_name: ugc-dev-nginx
+    restart: unless-stopped
+    ports:
+      - "5050:80"
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      # Static bundle produced by the frontend builder (vite build --watch).
+      - ../../frontend/dist:/usr/share/nginx/html:ro
+    depends_on:
+      - backend
+      - agents
+      - frontend
+    networks:
+      - ugc-dev-network
+
+volumes:
+  db_data:
+  minio_data:
+
+networks:
+  ugc-dev-network:
+    driver: bridge
